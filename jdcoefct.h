@@ -51,7 +51,7 @@ typedef struct {
 #ifdef BLOCK_SMOOTHING_SUPPORTED
   /* When doing block smoothing, we latch coefficient Al values here */
   int *coef_bits_latch;
-#define SAVED_COEFS  6          /* we save coef_bits[0..5] */
+#define SAVED_COEFS  10          /* we save coef_bits[0..10] */
 #endif
 } my_coef_controller;
 

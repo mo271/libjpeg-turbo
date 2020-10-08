@@ -343,6 +343,10 @@ decompress_data(j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
 #define Q20_POS  16
 #define Q11_POS  9
 #define Q02_POS  2
+#define Q03_POS  3
+#define Q12_POS  10
+#define Q21_POS  17
+#define Q30_POS  24
 
 /*
  * Determine whether block smoothing is applicable and safe.
@@ -396,7 +400,7 @@ smoothing_ok(j_decompress_ptr cinfo)
       return FALSE;
     coef_bits_latch[0] = coef_bits[0];
     /* Block smoothing is helpful if some AC coefficients remain inaccurate. */
-    for (coefi = 1; coefi <= 5; coefi++) {
+    for (coefi = 1; coefi <= 9; coefi++) {
       if (cinfo->input_scan_number > 1)
         prev_coef_bits_latch[coefi] = prev_coef_bits[coefi];
       coef_bits_latch[coefi] = coef_bits[coefi];
@@ -433,7 +437,7 @@ decompress_smooth_data(j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
   JCOEF *workspace;
   int *coef_bits;
   JQUANT_TBL *quanttbl;
-  JLONG Q00, Q01, Q02, Q10, Q11, Q20, num;
+  JLONG Q00, Q01, Q02, Q10, Q11, Q20, Q30, Q21, Q12, Q03, num;
   int DC01, DC02, DC03, DC04, DC05, DC06, DC07, DC08, DC09, DC10, DC11, DC12,
       DC13, DC14, DC15, DC16, DC17, DC18, DC19, DC20, DC21, DC22, DC23, DC24,
       DC25;
@@ -532,6 +536,10 @@ decompress_smooth_data(j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
     Q20 = quanttbl->quantval[Q20_POS];
     Q11 = quanttbl->quantval[Q11_POS];
     Q02 = quanttbl->quantval[Q02_POS];
+    Q03 = quanttbl->quantval[Q03_POS];
+    Q12 = quanttbl->quantval[Q11_POS];
+    Q21 = quanttbl->quantval[Q21_POS];
+    Q30 = quanttbl->quantval[Q30_POS];
     inverse_DCT = cinfo->idct->inverse_DCT[ci];
     output_ptr = output_buf[ci];
     /* Loop over all DCT blocks to be processed. */
@@ -682,6 +690,66 @@ decompress_smooth_data(j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
             pred = -pred;
           }
           workspace[2] = (JCOEF)pred;
+        }
+	/* AC03 */
+        if ((Al=coef_bits[6]) != 0 && workspace[3] == 0) {
+          num = Q00 * (DC07 - DC09 + 2 * DC12 - 2 * DC14 + DC17 - DC19);
+          if (num >= 0) {
+            pred = (int) (((Q03<<7) + num) / (Q03<<8));
+            if (Al > 0 && pred >= (1<<Al))
+              pred = (1<<Al)-1;
+          } else {
+            pred = (int) (((Q03<<7) - num) / (Q03<<8));
+            if (Al > 0 && pred >= (1<<Al))
+              pred = (1<<Al)-1;
+            pred = -pred;
+          }
+          workspace[3] = (JCOEF) pred;
+        }
+        /* AC12 */
+        if ((Al=coef_bits[7]) != 0 && workspace[10] == 0) {
+          num = Q00 * (DC07 - 3 * DC08 + DC09 - DC17 + 3 * DC18 - DC19);
+          if (num >= 0) {
+            pred = (int) (((Q12<<7) + num) / (Q12<<8));
+            if (Al > 0 && pred >= (1<<Al))
+              pred = (1<<Al)-1;
+          } else {
+            pred = (int) (((Q12<<7) - num) / (Q12<<8));
+            if (Al > 0 && pred >= (1<<Al))
+              pred = (1<<Al)-1;
+            pred = -pred;
+          }
+          workspace[10] = (JCOEF) pred;
+        }
+        /* AC21 */
+        if ((Al=coef_bits[8]) != 0 && workspace[17] == 0) {
+          num = Q00 * (DC07 - DC09 - 3 * DC12 + 3 * DC14 + DC17 - DC19);
+          if (num >= 0) {
+            pred = (int) (((Q21<<7) + num) / (Q21<<8));
+            if (Al > 0 && pred >= (1<<Al))
+              pred = (1<<Al)-1;
+          } else {
+            pred = (int) (((Q21<<7) - num) / (Q21<<8));
+            if (Al > 0 && pred >= (1<<Al))
+              pred = (1<<Al)-1;
+            pred = -pred;
+          }
+          workspace[17] = (JCOEF) pred;
+        }
+        /* AC30 */
+        if ((Al=coef_bits[9]) != 0 && workspace[24] == 0) {
+          num = Q00 * (DC07 + 2 * DC08 + DC09 - DC17 - 2 * DC18 - DC19);
+          if (num >= 0) {
+            pred = (int) (((Q30<<7) + num) / (Q30<<8));
+            if (Al > 0 && pred >= (1<<Al))
+              pred = (1<<Al)-1;
+          } else {
+            pred = (int) (((Q30<<7) - num) / (Q30<<8));
+            if (Al > 0 && pred >= (1<<Al))
+              pred = (1<<Al)-1;
+            pred = -pred;
+          }
+          workspace[24] = (JCOEF) pred;
         }
         /* coef_bits[0] is non-negative, otherwise this function would not be
          * called */
