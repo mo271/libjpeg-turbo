@@ -476,9 +476,7 @@ decompress_smooth_data(j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
       last_row = FALSE;
       penultimate_row = FALSE;
     } else if (cinfo->output_iMCU_row == last_iMCU_row - 1) {
-      /* NB: can't use last_row_height here; it is input-side-dependent! */
-      block_rows = (int)(compptr->height_in_blocks % compptr->v_samp_factor);
-      if (block_rows == 0) block_rows = compptr->v_samp_factor;
+      block_rows = compptr->v_samp_factor;
       access_rows = block_rows * 2; /* this and the next iMCU row */
       last_row = FALSE;
       penultimate_row = TRUE;
@@ -516,7 +514,8 @@ decompress_smooth_data(j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
     else {
       buffer = (*cinfo->mem->access_virt_barray)
         ((j_common_ptr)cinfo, coef->whole_image[ci],
-         (JDIMENSION)0, (JDIMENSION)access_rows, FALSE);
+         (cinfo->output_iMCU_row) * compptr->v_samp_factor,
+         (JDIMENSION)access_rows, FALSE);
       first_row = TRUE;
       second_row = FALSE;
     }
