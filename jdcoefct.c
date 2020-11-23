@@ -391,7 +391,12 @@ smoothing_ok(j_decompress_ptr cinfo)
         qtable->quantval[Q10_POS] == 0 ||
         qtable->quantval[Q20_POS] == 0 ||
         qtable->quantval[Q11_POS] == 0 ||
-        qtable->quantval[Q02_POS] == 0)
+        qtable->quantval[Q02_POS] == 0 ||
+	qtable->quantval[Q03_POS] == 0 ||
+        qtable->quantval[Q12_POS] == 0 ||
+        qtable->quantval[Q21_POS] == 0 ||
+	qtable->quantval[Q30_POS] == 0 
+	)
       return FALSE;
     /* DC values must be at least partly known for all components. */
     coef_bits = cinfo->coef_bits[ci];
@@ -536,7 +541,7 @@ decompress_smooth_data(j_decompress_ptr cinfo, JSAMPIMAGE output_buf)
     Q11 = quanttbl->quantval[Q11_POS];
     Q02 = quanttbl->quantval[Q02_POS];
     Q03 = quanttbl->quantval[Q03_POS];
-    Q12 = quanttbl->quantval[Q11_POS];
+    Q12 = quanttbl->quantval[Q12_POS];
     Q21 = quanttbl->quantval[Q21_POS];
     Q30 = quanttbl->quantval[Q30_POS];
     inverse_DCT = cinfo->idct->inverse_DCT[ci];
